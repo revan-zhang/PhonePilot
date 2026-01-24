@@ -1,9 +1,25 @@
 .app {
   min-height: 100vh;
   display: flex;
+  flex-direction: row;
+  -webkit-app-region: drag;
+}
+
+.camera-section {
+  width: 400px;
+  min-width: 320px;
+  max-width: 500px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-section {
+  flex: 1;
+  display: flex;
   flex-direction: column;
   padding: var(--spacing-xl);
-  -webkit-app-region: drag;
+  overflow-y: auto;
 }
 
 .app-header {

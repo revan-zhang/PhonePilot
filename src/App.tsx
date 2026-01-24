@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import CameraPanel from './components/CameraPanel';
 import './styles/App.css';
 
 function App() {
@@ -19,47 +20,53 @@ function App() {
 
   return (
     <div className="app">
-      <header className="app-header">
-        <div className="logo-container">
-          <div className="logo">
-            <span className="logo-icon">📱</span>
-          </div>
-          <h1>PhonePilot</h1>
-        </div>
-        <p className="subtitle">Your Desktop Companion</p>
-      </header>
+      <div className="camera-section">
+        <CameraPanel />
+      </div>
 
-      <main className="app-main">
-        <div className="info-card">
-          <h2>System Information</h2>
-          <div className="info-grid">
-            <div className="info-item">
-              <span className="info-label">Version</span>
-              <span className="info-value">{appVersion || 'Loading...'}</span>
+      <div className="main-section">
+        <header className="app-header">
+          <div className="logo-container">
+            <div className="logo">
+              <span className="logo-icon">📱</span>
             </div>
-            <div className="info-item">
-              <span className="info-label">Platform</span>
-              <span className="info-value">{platform || 'Loading...'}</span>
-            </div>
-            <div className="info-item">
-              <span className="info-label">Last Update</span>
-              <span className="info-value">{message || 'Waiting...'}</span>
+            <h1>PhonePilot</h1>
+          </div>
+          <p className="subtitle">Your Desktop Companion</p>
+        </header>
+
+        <main className="app-main">
+          <div className="info-card">
+            <h2>System Information</h2>
+            <div className="info-grid">
+              <div className="info-item">
+                <span className="info-label">Version</span>
+                <span className="info-value">{appVersion || 'Loading...'}</span>
+              </div>
+              <div className="info-item">
+                <span className="info-label">Platform</span>
+                <span className="info-value">{platform || 'Loading...'}</span>
+              </div>
+              <div className="info-item">
+                <span className="info-label">Last Update</span>
+                <span className="info-value">{message || 'Waiting...'}</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="action-section">
-          <h2>Quick Actions</h2>
-          <div className="button-group">
-            <button className="btn btn-primary">Get Started</button>
-            <button className="btn btn-secondary">Learn More</button>
+          <div className="action-section">
+            <h2>Quick Actions</h2>
+            <div className="button-group">
+              <button className="btn btn-primary">Get Started</button>
+              <button className="btn btn-secondary">Learn More</button>
+            </div>
           </div>
-        </div>
-      </main>
+        </main>
 
-      <footer className="app-footer">
-        <p>Built with Electron + React + TypeScript</p>
-      </footer>
+        <footer className="app-footer">
+          <p>Built with Electron + React + TypeScript</p>
+        </footer>
+      </div>
     </div>
   );
 }
