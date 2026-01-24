@@ -1,0 +1,75 @@
+appId: com.phonepilot.app
+productName: PhonePilot
+copyright: Copyright © 2024 PhonePilot Team
+
+directories:
+  output: release/${version}
+
+files:
+  - dist/**/*
+  - dist-electron/**/*
+
+extraMetadata:
+  main: dist-electron/main.js
+
+# macOS configuration
+mac:
+  category: public.app-category.utilities
+  # Skip code signing
+  identity: null
+  hardenedRuntime: false
+  gatekeeperAssess: false
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
+    - target: zip
+      arch:
+        - x64
+        - arm64
+
+dmg:
+  sign: false
+  contents:
+    - x: 130
+      y: 220
+    - x: 410
+      y: 220
+      type: link
+      path: /Applications
+
+# Windows configuration
+win:
+  artifactName: ${productName}-${version}-${arch}.${ext}
+  # Skip code signing
+  signingHashAlgorithms: []
+  sign: null
+  target:
+    - target: nsis
+      arch:
+        - x64
+    - target: portable
+      arch:
+        - x64
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  deleteAppDataOnUninstall: false
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: PhonePilot
+
+# Linux configuration
+linux:
+  category: Utility
+  maintainer: PhonePilot Team
+  target:
+    - target: AppImage
+      arch:
+        - x64
+    - target: deb
+      arch:
+        - x64
