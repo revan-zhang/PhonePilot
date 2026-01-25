@@ -1,8 +1,21 @@
 .app {
   min-height: 100vh;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
+}
+
+.app-title-bar {
+  height: 32px;
   -webkit-app-region: drag;
+  background: var(--color-background);
+  flex-shrink: 0;
+}
+
+.app-content {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
 }
 
 .camera-section {
@@ -21,7 +34,6 @@
   padding: var(--spacing-lg);
   gap: var(--spacing-lg);
   overflow-y: auto;
-  -webkit-app-region: no-drag;
 }
 
 /* Control Area */

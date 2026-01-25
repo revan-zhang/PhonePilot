@@ -2,17 +2,16 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: var(--color-surface);
-  border-right: 1px solid var(--color-border);
   -webkit-app-region: no-drag;
+  padding: var(--spacing-lg);
+  gap: var(--spacing-lg);
 }
 
 .camera-container {
   flex: 1;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: var(--spacing-md);
   overflow: hidden;
 }
 
@@ -21,7 +20,6 @@
   aspect-ratio: 9 / 16;
   width: 100%;
   max-height: 100%;
-  background: #000;
   border-radius: var(--radius-lg);
   overflow: hidden;
   display: flex;
@@ -30,24 +28,17 @@
 }
 
 .camera-video {
-  /*
-   * 16:9 video rotated 90° to display as 9:16
-   * 
-   * Container is 9:16 (portrait). Video source is 16:9 (landscape).
-   * We need to:
-   * 1. Size the video element as 16:9 relative to the 9:16 container
-   * 2. Rotate 90° so it visually becomes 9:16
-   * 3. The rotated video then fills the container perfectly
-   *
-   * For a 9:16 container (W × H where H/W = 16/9):
-   * - Video width should be H (container height) = 16/9 × W = 177.78% of container width
-   * - Video height should be W (container width) = 9/16 × H = 56.25% of container height
+  /**
+   * 16:9 video rotated 90 degrees to display as 9:16.
+   * Container is 9:16 (portrait), video source is 16:9 (landscape).
+   * Video width = 177.78% of container width (16/9 ratio).
+   * Video height = 56.25% of container height (9/16 ratio).
    */
   width: 177.78%;
   height: 56.25%;
   object-fit: contain;
-  background: #000;
   transform: rotate(90deg);
+  border-radius: var(--radius-lg);
 }
 
 .camera-error {
@@ -73,35 +64,37 @@
 
 /* Camera Controls */
 .camera-controls {
-  padding: var(--spacing-md);
-  border-top: 1px solid var(--color-border);
+  flex-shrink: 0;
 }
 
 .device-select {
   width: 100%;
   padding: var(--spacing-sm) var(--spacing-md);
-  background: var(--color-surface-hover);
+  padding-right: 36px;
+  background-color: var(--color-surface);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2378716c' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   color: var(--color-text);
   font-size: 0.875rem;
   cursor: pointer;
   -webkit-app-region: no-drag;
+  -webkit-appearance: none;
+  -moz-appearance: none;
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  padding-right: 36px;
 }
 
 .device-select:hover {
   border-color: var(--color-primary);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23f97316' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
 }
 
 .device-select:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.2);
 }
 
 .device-select option {

@@ -1,90 +1,93 @@
 .control-panel {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-lg);
+  gap: var(--spacing-md);
   padding: var(--spacing-lg);
   background: var(--color-surface);
   border-radius: var(--radius-lg);
   border: 1px solid var(--color-border);
 }
 
-.control-section {
+/* Connection Section */
+.connection-section {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm);
 }
 
-.control-section h3 {
-  font-size: 1rem;
+.connection-section h3 {
+  font-size: 0.875rem;
   font-weight: 600;
   color: var(--color-text);
-  margin: 0;
+  margin: 0 0 var(--spacing-xs) 0;
 }
 
-/* Connection Section */
-.connection-form {
+.connection-row {
   display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm);
+  align-items: stretch;
 }
 
-.form-row {
-  display: flex;
-  gap: var(--spacing-md);
-  align-items: flex-end;
+.connection-row input {
+  height: 36px;
+  box-sizing: border-box;
+  font-size: 0.875rem;
 }
 
-.form-row label {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
-  flex: 1;
-}
-
-.form-row label span {
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.form-row input,
-.form-row select {
-  padding: var(--spacing-sm) var(--spacing-md);
+.connection-row input {
+  padding: 0 var(--spacing-sm);
   background: var(--color-background);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   color: var(--color-text);
-  font-size: 0.875rem;
   -webkit-app-region: no-drag;
 }
 
-.form-row input:focus,
-.form-row select:focus {
+.connection-row input:focus {
   outline: none;
   border-color: var(--color-primary);
 }
 
-.form-row input:disabled,
-.form-row select:disabled {
+.connection-row input:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-.connection-actions {
-  align-items: center;
+.input-ip {
+  width: 140px;
+  flex-shrink: 0;
 }
 
-.connection-actions .btn {
-  flex: 0 0 auto;
-  min-width: 80px;
+.input-port {
+  width: 70px;
+  flex-shrink: 0;
 }
 
-.status-indicator {
+.position-display {
   display: flex;
   align-items: center;
-  gap: var(--spacing-xs);
+  gap: var(--spacing-sm);
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
   margin-left: auto;
+  padding: 0 var(--spacing-sm);
+}
+
+.position-display .coordinate {
+  color: var(--color-text);
+  font-family: monospace;
+  font-weight: 500;
+}
+
+.btn-connect {
+  height: 36px;
+  min-width: 88px;
+  padding: 0 var(--spacing-lg);
+  font-size: 0.875rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .status-dot {
@@ -106,7 +109,7 @@
 }
 
 .status-indicator.disconnected .status-dot {
-  background: #64748b;
+  background: #a8a29e;
 }
 
 @keyframes pulse {
@@ -123,16 +126,44 @@
   color: var(--color-text-muted);
 }
 
-/* Direction Section */
-.direction-section {
+/* Error Message */
+.error-message {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: var(--radius-md);
+  color: #dc2626;
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+/* Control Content - Left/Right Split */
+.control-content {
+  display: flex;
+  gap: var(--spacing-lg);
   padding-top: var(--spacing-md);
   border-top: 1px solid var(--color-border);
+}
+
+.control-left {
+  flex: 0 0 auto;
+}
+
+.control-right {
+  flex: 1;
+  min-width: 200px;
+}
+
+/* Direction Section */
+.direction-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
 }
 
 .step-selector {
   display: flex;
   justify-content: center;
-  margin-bottom: var(--spacing-md);
 }
 
 .step-selector label {
@@ -142,12 +173,12 @@
 }
 
 .step-selector label span {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   color: var(--color-text-muted);
 }
 
 .step-selector select {
-  padding: var(--spacing-xs) var(--spacing-md);
+  padding: var(--spacing-xs) var(--spacing-sm);
   background: var(--color-background);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -166,13 +197,12 @@
 .direction-controls {
   display: flex;
   justify-content: center;
-  margin: var(--spacing-md) 0;
 }
 
 .direction-grid {
   display: grid;
-  grid-template-columns: repeat(3, 60px);
-  grid-template-rows: repeat(3, 60px);
+  grid-template-columns: repeat(3, 50px);
+  grid-template-rows: repeat(3, 50px);
   gap: var(--spacing-xs);
 }
 
@@ -183,10 +213,10 @@
 }
 
 .direction-btn {
-  width: 50px;
-  height: 50px;
+  width: 44px;
+  height: 44px;
   padding: 0;
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   background: var(--color-background);
   border: 1px solid var(--color-border);
   color: var(--color-text);
@@ -211,10 +241,10 @@
 }
 
 .click-btn {
-  width: 50px;
-  height: 50px;
+  width: 44px;
+  height: 44px;
   padding: 0;
-  font-size: 0.75rem;
+  font-size: 0.625rem;
   font-weight: 600;
   background: var(--color-primary);
   border: none;
@@ -239,32 +269,33 @@
   cursor: not-allowed;
 }
 
-/* Position Display */
-.position-display {
+/* Calibration Section */
+.calibration-section {
   display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: var(--spacing-md);
-  padding: var(--spacing-sm) var(--spacing-md);
-  background: var(--color-background);
-  border-radius: var(--radius-md);
-  font-size: 0.875rem;
-  color: var(--color-text-muted);
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  height: 100%;
 }
 
-.position-display .coordinate {
+.calibration-section h4 {
+  font-size: 0.75rem;
+  font-weight: 600;
   color: var(--color-text);
-  font-family: monospace;
-  font-weight: 500;
+  margin: 0;
 }
 
-/* Error Message */
-.error-message {
-  padding: var(--spacing-sm) var(--spacing-md);
-  background: #7f1d1d;
-  border: 1px solid #dc2626;
+.calibration-placeholder {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-background);
+  border: 1px dashed var(--color-border);
   border-radius: var(--radius-md);
-  color: #fca5a5;
-  font-size: 0.875rem;
-  text-align: center;
+  min-height: 120px;
+}
+
+.calibration-placeholder p {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
 }

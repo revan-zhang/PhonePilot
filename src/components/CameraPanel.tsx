@@ -31,9 +31,42 @@ function CameraPanel() {
     }
   }, []);
 
-  // Start camera with specific device
+  /**
+   * Applies manual focus mode to disable autofocus and prevent camera shake.
+   * Falls back gracefully if the camera doesn't support manual focus.
+   */
+  const applyManualFocus = async (videoTrack: MediaStreamTrack) => {
+    try {
+      const capabilities = videoTrack.getCapabilities() as MediaTrackCapabilities & {
+        focusMode?: string[];
+        focusDistance?: { min: number; max: number };
+      };
+
+      if (capabilities.focusMode?.includes('manual')) {
+        await videoTrack.applyConstraints({
+          // @ts-expect-error focusMode is not in standard TypeScript types
+          focusMode: 'manual',
+        });
+        console.log('Manual focus mode enabled');
+      } else if (capabilities.focusMode?.includes('continuous')) {
+        await videoTrack.applyConstraints({
+          // @ts-expect-error focusMode is not in standard TypeScript types
+          focusMode: 'continuous',
+        });
+        console.log('Continuous focus mode enabled (manual not supported)');
+      } else {
+        console.log('Focus mode control not supported by this camera');
+      }
+    } catch (err) {
+      console.warn('Failed to set focus mode:', err);
+    }
+  };
+
+  /**
+   * Starts the camera with optional device ID.
+   * Configures manual focus to prevent autofocus hunting during movement.
+   */
   const startCamera = useCallback(async (deviceId?: string) => {
-    // Stop existing stream
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
     }
@@ -55,13 +88,14 @@ function CameraPanel() {
         videoRef.current.srcObject = mediaStream;
       }
 
-      // Update selected device ID from the actual track
       const videoTrack = mediaStream.getVideoTracks()[0];
       if (videoTrack) {
         const settings = videoTrack.getSettings();
         if (settings.deviceId) {
           setSelectedDeviceId(settings.deviceId);
         }
+
+        await applyManualFocus(videoTrack);
       }
 
       setError(null);
@@ -110,6 +144,22 @@ function CameraPanel() {
 
   return (
     <div className="camera-panel">
+      {devices.length > 1 && (
+        <div className="camera-controls">
+          <select
+            value={selectedDeviceId}
+            onChange={handleDeviceChange}
+            className="device-select"
+          >
+            {devices.map((device) => (
+              <option key={device.deviceId} value={device.deviceId}>
+                {device.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
       <div className="camera-container">
         <div className="camera-viewport">
           {error ? (
@@ -128,22 +178,6 @@ function CameraPanel() {
           )}
         </div>
       </div>
-
-      {devices.length > 1 && (
-        <div className="camera-controls">
-          <select
-            value={selectedDeviceId}
-            onChange={handleDeviceChange}
-            className="device-select"
-          >
-            {devices.map((device) => (
-              <option key={device.deviceId} value={device.deviceId}>
-                {device.label}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
     </div>
   );
 }

@@ -109,26 +109,29 @@ function ControlPanel() {
   /**
    * Disconnects from the arm controller.
    * First resets machine position to origin, then closes the COM port.
+   * Can be called even when not connected to release any previous connection.
    */
   const handleDisconnect = async () => {
-    if (state.isLoading || !state.isConnected) return;
+    if (state.isLoading) return;
     
     setState(prev => ({ ...prev, isLoading: true, error: null }));
     
     try {
-      await sendCommand({
-        duankou: '0',
-        hco: state.resourceHandle,
-        daima: 'X0Y0Z0',
-      });
-      
-      await delay(ARM_CONTROLLER_CONFIG.commandDelay);
-      
-      await sendCommand({
-        duankou: '0',
-        hco: state.resourceHandle,
-        daima: '0',
-      });
+      if (state.isConnected && state.resourceHandle > 0) {
+        await sendCommand({
+          duankou: '0',
+          hco: state.resourceHandle,
+          daima: 'X0Y0Z0',
+        });
+        
+        await delay(ARM_CONTROLLER_CONFIG.commandDelay);
+        
+        await sendCommand({
+          duankou: '0',
+          hco: state.resourceHandle,
+          daima: '0',
+        });
+      }
       
       setState(prev => ({
         ...prev,
@@ -142,8 +145,12 @@ function ControlPanel() {
     } catch (error) {
       setState(prev => ({
         ...prev,
+        isConnected: false,
+        resourceHandle: 0,
+        currentX: 0,
+        currentY: 0,
         isLoading: false,
-        error: error instanceof Error ? error.message : 'Disconnect failed',
+        isReady: false,
       }));
     }
   };
@@ -243,133 +250,36 @@ function ControlPanel() {
     <div className="control-panel">
       <div className="control-section connection-section">
         <h3>连接设置</h3>
-        <div className="connection-form">
-          <div className="form-row">
-            <label>
-              <span>IP 地址</span>
-              <input
-                type="text"
-                value={state.serverIP}
-                onChange={(e) => setState(prev => ({ ...prev, serverIP: e.target.value }))}
-                disabled={state.isConnected}
-                placeholder="192.168.1.236"
-              />
-            </label>
-            <label>
-              <span>串口</span>
-              <input
-                type="text"
-                value={state.comPort}
-                onChange={(e) => setState(prev => ({ ...prev, comPort: e.target.value }))}
-                disabled={state.isConnected}
-                placeholder="COM3"
-              />
-            </label>
+        <div className="connection-row">
+          <input
+            type="text"
+            value={state.serverIP}
+            onChange={(e) => setState(prev => ({ ...prev, serverIP: e.target.value }))}
+            disabled={state.isConnected}
+            placeholder="IP 地址"
+            className="input-ip"
+          />
+          <input
+            type="text"
+            value={state.comPort}
+            onChange={(e) => setState(prev => ({ ...prev, comPort: e.target.value }))}
+            disabled={state.isConnected}
+            placeholder="串口"
+            className="input-port"
+          />
+          <div className="position-display">
+            <span className="coordinate">X: {state.currentX}</span>
+            <span className="coordinate">Y: {state.currentY}</span>
           </div>
-          <div className="form-row connection-actions">
-            <button
-              className="btn btn-primary"
-              onClick={handleConnect}
-              disabled={state.isConnected || state.isLoading}
-            >
-              {state.isLoading && !state.isConnected ? '连接中...' : '连接'}
-            </button>
-            <button
-              className="btn btn-secondary"
-              onClick={handleDisconnect}
-              disabled={!state.isConnected || state.isLoading}
-            >
-              {state.isLoading && state.isConnected ? '断开中...' : '断开'}
-            </button>
-            <div className={`status-indicator ${state.isConnected ? (state.isReady ? 'connected' : 'connecting') : 'disconnected'}`}>
-              <span className="status-dot"></span>
-              <span className="status-text">
-                {state.isConnected ? (state.isReady ? '已连接' : '准备中...') : '未连接'}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="control-section direction-section">
-        <div className="step-selector">
-          <label>
-            <span>步长</span>
-            <select
-              value={state.stepSize}
-              onChange={(e) => setState(prev => ({ ...prev, stepSize: parseInt(e.target.value, 10) }))}
-              disabled={isControlDisabled}
-            >
-              {ARM_CONTROLLER_CONFIG.stepOptions.map(step => (
-                <option key={step} value={step}>{step}</option>
-              ))}
-            </select>
-          </label>
-        </div>
-
-        <div className="direction-controls">
-          <div className="direction-grid">
-            <div className="grid-cell"></div>
-            <div className="grid-cell">
-              <button
-                className="btn direction-btn"
-                onClick={() => handleMove('up')}
-                disabled={isControlDisabled}
-                title="向上"
-              >
-                ↑
-              </button>
-            </div>
-            <div className="grid-cell"></div>
-            <div className="grid-cell">
-              <button
-                className="btn direction-btn"
-                onClick={() => handleMove('left')}
-                disabled={isControlDisabled}
-                title="向左"
-              >
-                ←
-              </button>
-            </div>
-            <div className="grid-cell">
-              <button
-                className="btn click-btn"
-                onClick={handleClick}
-                disabled={isControlDisabled}
-                title="点击"
-              >
-                点击
-              </button>
-            </div>
-            <div className="grid-cell">
-              <button
-                className="btn direction-btn"
-                onClick={() => handleMove('right')}
-                disabled={isControlDisabled}
-                title="向右"
-              >
-                →
-              </button>
-            </div>
-            <div className="grid-cell"></div>
-            <div className="grid-cell">
-              <button
-                className="btn direction-btn"
-                onClick={() => handleMove('down')}
-                disabled={isControlDisabled}
-                title="向下"
-              >
-                ↓
-              </button>
-            </div>
-            <div className="grid-cell"></div>
-          </div>
-        </div>
-
-        <div className="position-display">
-          <span>当前位置:</span>
-          <span className="coordinate">X: {state.currentX}</span>
-          <span className="coordinate">Y: {state.currentY}</span>
+          <button
+            className={`btn btn-connect ${state.isConnected ? 'btn-secondary' : 'btn-primary'}`}
+            onClick={state.isConnected ? handleDisconnect : handleConnect}
+            disabled={state.isLoading}
+          >
+            {state.isLoading
+              ? (state.isConnected ? '断开中...' : '连接中...')
+              : (state.isConnected ? '断开连接' : '连接')}
+          </button>
         </div>
       </div>
 
@@ -378,6 +288,95 @@ function ControlPanel() {
           {state.error}
         </div>
       )}
+
+      <div className="control-content">
+        <div className="control-left">
+          <div className="direction-section">
+            <div className="step-selector">
+              <label>
+                <span>步长</span>
+                <select
+                  value={state.stepSize}
+                  onChange={(e) => setState(prev => ({ ...prev, stepSize: parseInt(e.target.value, 10) }))}
+                  disabled={isControlDisabled}
+                >
+                  {ARM_CONTROLLER_CONFIG.stepOptions.map(step => (
+                    <option key={step} value={step}>{step}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            <div className="direction-controls">
+              <div className="direction-grid">
+                <div className="grid-cell"></div>
+                <div className="grid-cell">
+                  <button
+                    className="btn direction-btn"
+                    onClick={() => handleMove('up')}
+                    disabled={isControlDisabled}
+                    title="向上"
+                  >
+                    ↑
+                  </button>
+                </div>
+                <div className="grid-cell"></div>
+                <div className="grid-cell">
+                  <button
+                    className="btn direction-btn"
+                    onClick={() => handleMove('left')}
+                    disabled={isControlDisabled}
+                    title="向左"
+                  >
+                    ←
+                  </button>
+                </div>
+                <div className="grid-cell">
+                  <button
+                    className="btn click-btn"
+                    onClick={handleClick}
+                    disabled={isControlDisabled}
+                    title="点击"
+                  >
+                    点击
+                  </button>
+                </div>
+                <div className="grid-cell">
+                  <button
+                    className="btn direction-btn"
+                    onClick={() => handleMove('right')}
+                    disabled={isControlDisabled}
+                    title="向右"
+                  >
+                    →
+                  </button>
+                </div>
+                <div className="grid-cell"></div>
+                <div className="grid-cell">
+                  <button
+                    className="btn direction-btn"
+                    onClick={() => handleMove('down')}
+                    disabled={isControlDisabled}
+                    title="向下"
+                  >
+                    ↓
+                  </button>
+                </div>
+                <div className="grid-cell"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="control-right">
+          <div className="calibration-section">
+            <h4>摄像头校准</h4>
+            <div className="calibration-placeholder">
+              <p>校准功能开发中...</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
