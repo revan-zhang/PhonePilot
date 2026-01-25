@@ -1,0 +1,55 @@
+---
+description: Comment conventions - English only, JSDoc at function headers
+globs: "**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# Comment Standards
+
+## Language
+
+All comments must be written in **English**. Do not use Chinese or other languages in code comments.
+
+## Comment Placement
+
+Avoid inline comments. Instead, use JSDoc block comments at function/method headers.
+
+```typescript
+// ❌ BAD - Inline comments
+function move(direction: string) {
+  newY -= stepSize;  // Y decreases when moving up
+  newX = Math.max(0, newX);  // Ensure non-negative
+}
+
+// ✅ GOOD - JSDoc at function header
+/**
+ * Moves the arm in the specified direction.
+ * Note: Y axis is inverted (decreases when moving up).
+ * Coordinates are clamped to non-negative values.
+ */
+function move(direction: string) {
+  newY -= stepSize;
+  newX = Math.max(0, newX);
+}
+```
+
+## JSDoc Requirements
+
+- Include `@param` for each parameter with description
+- Include `@returns` for non-void functions
+- Add `@throws` if function can throw errors
+
+```typescript
+/**
+ * Sends a command to the arm controller via HTTP.
+ * Uses Electron IPC to bypass CORS restrictions.
+ * Falls back to fetch API when Electron is unavailable.
+ *
+ * @param params - Command parameters (duankou, hco, daima)
+ * @returns Server response as string
+ * @throws Error if request fails
+ */
+async function sendCommand(params: CommandParams): Promise<string> {
+  // implementation
+}
+```

@@ -33,26 +33,37 @@ function ControlPanel() {
     error: null,
   });
 
+  /**
+   * Sends a command to the arm controller via HTTP.
+   * Uses Electron IPC to bypass CORS restrictions.
+   * Falls back to fetch API when Electron is unavailable (development mode).
+   *
+   * @param params - Command parameters (duankou, hco, daima)
+   * @returns Server response as string
+   * @throws Error if request fails
+   */
   const sendCommand = useCallback(async (params: { duankou: string; hco: number; daima: string }): Promise<string> => {
     const url = buildArmApiUrl(state.serverIP, params);
     try {
-      // Use Electron IPC to bypass CORS
       if (window.electronAPI?.httpRequest) {
         const response = await window.electronAPI.httpRequest(url);
         return response.data;
       } else {
-        // Fallback to fetch for development without Electron
         const response = await fetch(url);
         const text = await response.text();
         return text;
       }
     } catch (error) {
-      throw new Error(`请求失败: ${error instanceof Error ? error.message : '未知错误'}`);
+      throw new Error(`Request failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }, [state.serverIP]);
 
   const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+  /**
+   * Connects to the arm controller by opening the COM port.
+   * After successful connection, waits for device to be ready before enabling controls.
+   */
   const handleConnect = async () => {
     if (state.isLoading) return;
     
@@ -76,7 +87,6 @@ function ControlPanel() {
           isReady: false,
         }));
         
-        // Wait for the device to be ready
         await delay(ARM_CONTROLLER_CONFIG.deviceReadyDelay);
         
         setState(prev => ({ ...prev, isReady: true }));
@@ -84,25 +94,28 @@ function ControlPanel() {
         setState(prev => ({
           ...prev,
           isLoading: false,
-          error: '端口打开失败，请检查端口是否被占用',
+          error: 'Failed to open port. Check if port is occupied.',
         }));
       }
     } catch (error) {
       setState(prev => ({
         ...prev,
         isLoading: false,
-        error: error instanceof Error ? error.message : '连接失败',
+        error: error instanceof Error ? error.message : 'Connection failed',
       }));
     }
   };
 
+  /**
+   * Disconnects from the arm controller.
+   * First resets machine position to origin, then closes the COM port.
+   */
   const handleDisconnect = async () => {
     if (state.isLoading || !state.isConnected) return;
     
     setState(prev => ({ ...prev, isLoading: true, error: null }));
     
     try {
-      // Reset the machine position
       await sendCommand({
         duankou: '0',
         hco: state.resourceHandle,
@@ -111,7 +124,6 @@ function ControlPanel() {
       
       await delay(ARM_CONTROLLER_CONFIG.commandDelay);
       
-      // Close the port
       await sendCommand({
         duankou: '0',
         hco: state.resourceHandle,
@@ -131,11 +143,18 @@ function ControlPanel() {
       setState(prev => ({
         ...prev,
         isLoading: false,
-        error: error instanceof Error ? error.message : '断开连接失败',
+        error: error instanceof Error ? error.message : 'Disconnect failed',
       }));
     }
   };
 
+  /**
+   * Moves the arm in the specified direction by the current step size.
+   * Y axis is inverted: Y decreases when moving up, increases when moving down.
+   * Coordinates are clamped to non-negative values.
+   *
+   * @param direction - Movement direction (up, down, left, right)
+   */
   const handleMove = async (direction: 'up' | 'down' | 'left' | 'right') => {
     if (state.isLoading || !state.isConnected || !state.isReady) return;
     
@@ -144,10 +163,10 @@ function ControlPanel() {
     
     switch (direction) {
       case 'up':
-        newY -= state.stepSize;  // Y decreases when moving up
+        newY -= state.stepSize;
         break;
       case 'down':
-        newY += state.stepSize;  // Y increases when moving down
+        newY += state.stepSize;
         break;
       case 'left':
         newX -= state.stepSize;
@@ -157,7 +176,6 @@ function ControlPanel() {
         break;
     }
     
-    // Ensure coordinates are non-negative
     newX = Math.max(0, newX);
     newY = Math.max(0, newY);
     
@@ -180,18 +198,21 @@ function ControlPanel() {
       setState(prev => ({
         ...prev,
         isLoading: false,
-        error: error instanceof Error ? error.message : '移动失败',
+        error: error instanceof Error ? error.message : 'Move failed',
       }));
     }
   };
 
+  /**
+   * Performs a click operation at the current position.
+   * Lowers the pen (Z6), waits briefly, then raises it (Z0).
+   */
   const handleClick = async () => {
     if (state.isLoading || !state.isConnected || !state.isReady) return;
     
     setState(prev => ({ ...prev, isLoading: true, error: null }));
     
     try {
-      // Pen down
       await sendCommand({
         duankou: '0',
         hco: state.resourceHandle,
@@ -200,7 +221,6 @@ function ControlPanel() {
       
       await delay(ARM_CONTROLLER_CONFIG.clickDelay);
       
-      // Pen up
       await sendCommand({
         duankou: '0',
         hco: state.resourceHandle,
@@ -212,7 +232,7 @@ function ControlPanel() {
       setState(prev => ({
         ...prev,
         isLoading: false,
-        error: error instanceof Error ? error.message : '点击操作失败',
+        error: error instanceof Error ? error.message : 'Click operation failed',
       }));
     }
   };

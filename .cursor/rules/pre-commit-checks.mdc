@@ -1,0 +1,28 @@
+---
+description: Always run lint and typecheck after code changes
+alwaysApply: true
+---
+
+# Pre-commit Validation Checks
+
+After completing **all** code changes, you **MUST** run validation scripts to ensure code quality.
+
+## Required Commands
+
+```bash
+yarn lint
+yarn typecheck
+```
+
+## Workflow
+
+1. Complete all file modifications
+2. Run `yarn lint` - fix any ESLint errors
+3. Run `yarn typecheck` - fix any TypeScript errors
+4. Only consider the task complete when both pass with no errors
+
+## Fix Strategy
+
+- For lint errors: Run `yarn lint:fix` for auto-fixable issues
+- For type errors: Review and fix manually
+- Do not ignore or suppress errors without explicit user approval

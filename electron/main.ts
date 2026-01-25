@@ -1,16 +1,13 @@
 import { app, BrowserWindow, ipcMain, net } from 'electron';
 import path from 'path';
 
-// The built directory structure
-//
-// ├─┬ dist-electron
-// │ ├─┬ main
-// │ │ └── main.js
-// │ └─┬ preload
-// │   └── preload.js
-// ├─┬ dist
-// │ └── index.html
-// │
+/**
+ * Build output directory structure:
+ * ├── dist-electron/
+ * │   ├── main/main.js
+ * │   └── preload/preload.js
+ * └── dist/index.html
+ */
 process.env.DIST = path.join(__dirname, '../dist');
 process.env.VITE_PUBLIC = app.isPackaged
   ? process.env.DIST
@@ -18,9 +15,15 @@ process.env.VITE_PUBLIC = app.isPackaged
 
 let mainWindow: BrowserWindow | null = null;
 
-// 🚧 Use ['ENV_NAME'] to avoid vite:define plugin
+/** Use bracket notation to avoid vite:define plugin transformation */
 const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL'];
 
+/**
+ * Creates the main application window.
+ * Configures window size, preload script, and content loading.
+ * Shows window only after ready to prevent visual flash.
+ * Sends timestamp message to renderer on load.
+ */
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -37,12 +40,10 @@ function createWindow() {
     show: false,
   });
 
-  // Show window when ready to prevent visual flash
   mainWindow.once('ready-to-show', () => {
     mainWindow?.show();
   });
 
-  // Test active push message to Renderer-process.
   mainWindow.webContents.on('did-finish-load', () => {
     mainWindow?.webContents.send(
       'main-process-message',
@@ -61,37 +62,45 @@ function createWindow() {
   });
 }
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
+/**
+ * App initialization.
+ * Creates window when Electron is ready.
+ * On macOS, recreates window when dock icon is clicked with no windows open.
+ */
 app.whenReady().then(() => {
   createWindow();
 
   app.on('activate', () => {
-    // On macOS it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow();
     }
   });
 });
 
-// Quit when all windows are closed, except on macOS.
+/** Quit when all windows are closed, except on macOS */
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();
   }
 });
 
-// IPC handlers
+/** IPC handler: Returns app version */
 ipcMain.handle('get-app-version', () => {
   return app.getVersion();
 });
 
+/** IPC handler: Returns current platform */
 ipcMain.handle('get-platform', () => {
   return process.platform;
 });
 
-// HTTP request handler (bypasses CORS)
+/**
+ * IPC handler: Performs HTTP request from main process.
+ * Bypasses CORS restrictions that would block renderer process requests.
+ *
+ * @param url - Target URL for the HTTP request
+ * @returns Promise resolving to { status, data }
+ */
 ipcMain.handle('http-request', async (_event, url: string) => {
   return new Promise((resolve, reject) => {
     const request = net.request(url);

@@ -1,38 +1,45 @@
 /**
- * 机械臂控制器配置
+ * Arm controller configuration.
+ * Contains default values for server connection, timing, and movement settings.
  */
 export const ARM_CONTROLLER_CONFIG = {
-  /** 默认服务器 IP 地址 */
+  /** Default server IP address */
   defaultServerIP: '192.168.1.236',
-  /** API 服务端口 */
+  /** API service port */
   apiPort: '8082',
-  /** 默认串口 */
+  /** Default COM port */
   defaultComPort: 'COM3',
-  /** API 路径 */
+  /** API endpoint path */
   apiPath: '/MyWcfService/getstring',
-  /** 连接后等待设备就绪的时间 (ms) */
+  /** Delay after connection for device to be ready (ms) */
   deviceReadyDelay: 2000,
-  /** 命令间隔时间 (ms) */
+  /** Delay between sequential commands (ms) */
   commandDelay: 300,
-  /** 点击操作延时 (ms) */
+  /** Delay for click operation (ms) */
   clickDelay: 250,
-  /** 可选步长值 */
+  /** Available step size options */
   stepOptions: [1, 5, 10, 20] as const,
-  /** 默认步长 */
+  /** Default step size for movement */
   defaultStepSize: 10,
 } as const;
 
 /**
- * 解析服务器响应
- * 服务器返回的是 JSON 格式的字符串（如 "1136"），需要去除引号
+ * Parses server response by removing surrounding quotes.
+ * The server returns JSON-formatted strings (e.g., "1136"), which need quote stripping.
+ *
+ * @param response - Raw response string from server
+ * @returns Cleaned string without surrounding quotes
  */
 export function parseServerResponse(response: string): string {
   return response.replace(/^"|"$/g, '');
 }
 
 /**
- * 解析资源句柄
- * 返回解析后的数字，如果解析失败返回 0
+ * Parses resource handle from server response.
+ * Returns the parsed number, or 0 if parsing fails.
+ *
+ * @param response - Raw response string from server
+ * @returns Parsed resource handle (> 0 for success, 0 for failure)
  */
 export function parseResourceHandle(response: string): number {
   const cleanResult = parseServerResponse(response);
@@ -41,7 +48,11 @@ export function parseResourceHandle(response: string): number {
 }
 
 /**
- * 构建 API URL
+ * Builds the API URL for arm controller commands.
+ *
+ * @param serverIP - Server IP address
+ * @param params - Command parameters (duankou, hco, daima)
+ * @returns Complete API URL with query parameters
  */
 export function buildArmApiUrl(
   serverIP: string,
