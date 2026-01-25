@@ -12,6 +12,8 @@ function CameraPanel() {
   const [error, setError] = useState<string | null>(null);
   const [devices, setDevices] = useState<VideoDevice[]>([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState<string>('');
+  const [showCrosshair, setShowCrosshair] = useState(false);
+  const [showGrid, setShowGrid] = useState(false);
 
   // Get list of video devices
   const getVideoDevices = useCallback(async () => {
@@ -176,7 +178,24 @@ function CameraPanel() {
               muted
             />
           )}
+          {showCrosshair && <div className="overlay-crosshair" />}
+          {showGrid && <div className="overlay-grid" />}
         </div>
+      </div>
+
+      <div className="overlay-controls">
+        <button
+          className={`overlay-btn ${showCrosshair ? 'active' : ''}`}
+          onClick={() => setShowCrosshair(!showCrosshair)}
+        >
+          十字线
+        </button>
+        <button
+          className={`overlay-btn ${showGrid ? 'active' : ''}`}
+          onClick={() => setShowGrid(!showGrid)}
+        >
+          网格
+        </button>
       </div>
     </div>
   );
