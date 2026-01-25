@@ -1,0 +1,72 @@
+---
+description: Mechanical arm controller API specifications and usage guidelines
+globs: "**/armController.ts,**/ControlPanel.tsx"
+alwaysApply: false
+---
+
+# Mechanical Arm Controller API
+
+## API Endpoint
+
+```
+http://{serverIP}:8082/MyWcfService/getstring?duankou={port}&hco={resourceHandle}&daima={command}
+```
+
+## Parameters
+
+| Parameter | Description |
+|-----------|-------------|
+| `duankou` | COM port (e.g., "COM3") for opening, "0" for commands |
+| `hco` | Resource handle returned from connection (0 when connecting) |
+| `daima` | Command code (see below) |
+
+## Commands
+
+### Connection
+
+```
+# Open COM port - returns resource handle (> 0 = success, 0 = failure)
+duankou=COM3, hco=0, daima=0
+
+# Close port (always reset position first)
+duankou=0, hco={handle}, daima=X0Y0Z0  # Reset to origin
+duankou=0, hco={handle}, daima=0        # Close port
+```
+
+### Movement
+
+```
+# Move to position (X, Y in millimeters)
+daima=X{x}Y{y}  # Example: X50Y50
+```
+
+### Z-Axis (Touch/Click)
+
+```
+# Lower stylus for touch (6mm typical for screen contact)
+daima=Z6
+
+# Raise stylus
+daima=Z0
+```
+
+## Timing Requirements
+
+1. **After connection**: Wait 2000ms before sending commands
+2. **Between commands**: Wait 300ms to ensure execution
+3. **Click operation**: Lower (Z6) → Wait 250ms → Raise (Z0)
+
+## Z-Axis Values Reference
+
+| Value | Description |
+|-------|-------------|
+| Z0 | Stylus fully raised |
+| Z6 | Touch screen contact (default) |
+| Z8 | Deeper press (for hard-to-touch screens) |
+| Z10 | Maximum depth |
+
+## Error Handling
+
+- Resource handle = 0: Port failed to open (occupied or not found)
+- Always reset to X0Y0Z0 before closing port
+- Clamp X/Y coordinates to non-negative values

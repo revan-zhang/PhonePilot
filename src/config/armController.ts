@@ -20,7 +20,13 @@ export const ARM_CONTROLLER_CONFIG = {
   /** Available step size options */
   stepOptions: [1, 5, 10, 20] as const,
   /** Default step size for movement */
-  defaultStepSize: 10,
+  defaultStepSize: 5,
+  /** Available Z-axis depth options (in mm) */
+  zDepthOptions: [6, 8, 10, 12] as const,
+  /** Default Z-axis depth for click */
+  defaultZDepth: 12,
+  /** Z-axis value for stylus up */
+  zUp: 0,
 } as const;
 
 /**

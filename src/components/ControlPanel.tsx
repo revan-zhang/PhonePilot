@@ -12,6 +12,7 @@ interface ControlPanelState {
   serverIP: string;
   comPort: string;
   stepSize: number;
+  zDepth: number;
   currentX: number;
   currentY: number;
   isLoading: boolean;
@@ -33,6 +34,7 @@ function ControlPanel() {
     serverIP: ARM_CONTROLLER_CONFIG.defaultServerIP,
     comPort: ARM_CONTROLLER_CONFIG.defaultComPort,
     stepSize: ARM_CONTROLLER_CONFIG.defaultStepSize,
+    zDepth: ARM_CONTROLLER_CONFIG.defaultZDepth,
     currentX: 0,
     currentY: 0,
     isLoading: false,
@@ -246,7 +248,7 @@ function ControlPanel() {
       await sendCommand({
         duankou: '0',
         hco: state.resourceHandle,
-        daima: 'Z6',
+        daima: `Z${state.zDepth}`,
       });
       
       await delay(ARM_CONTROLLER_CONFIG.clickDelay);
@@ -254,10 +256,10 @@ function ControlPanel() {
       await sendCommand({
         duankou: '0',
         hco: state.resourceHandle,
-        daima: 'Z0',
+        daima: `Z${ARM_CONTROLLER_CONFIG.zUp}`,
       });
       
-      addLog('点击', `位置 (${state.currentX},${state.currentY})`);
+      addLog('点击', `位置 (${state.currentX},${state.currentY}) 深度 Z${state.zDepth}`);
       
       setState(prev => ({ ...prev, isLoading: false }));
     } catch (error) {
@@ -318,7 +320,7 @@ function ControlPanel() {
       <div className="control-content">
         <div className="control-left">
           <div className="direction-section">
-            <div className="step-selector">
+            <div className="control-selectors">
               <label>
                 <span>步长</span>
                 <select
@@ -328,6 +330,18 @@ function ControlPanel() {
                 >
                   {ARM_CONTROLLER_CONFIG.stepOptions.map(step => (
                     <option key={step} value={step}>{step}</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                <span>深度</span>
+                <select
+                  value={state.zDepth}
+                  onChange={(e) => setState(prev => ({ ...prev, zDepth: parseInt(e.target.value, 10) }))}
+                  disabled={isControlDisabled}
+                >
+                  {ARM_CONTROLLER_CONFIG.zDepthOptions.map(depth => (
+                    <option key={depth} value={depth}>Z{depth}</option>
                   ))}
                 </select>
               </label>

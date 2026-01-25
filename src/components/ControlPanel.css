@@ -164,25 +164,27 @@
   flex-direction: column;
   gap: var(--spacing-md);
   flex: 1;
+  justify-content: center;
 }
 
-.step-selector {
+.control-selectors {
   display: flex;
-  justify-content: flex-start;
+  justify-content: center;
+  gap: var(--spacing-md);
 }
 
-.step-selector label {
+.control-selectors label {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
 }
 
-.step-selector label span {
+.control-selectors label span {
   font-size: 0.75rem;
   color: var(--color-text-muted);
 }
 
-.step-selector select {
+.control-selectors select {
   padding: var(--spacing-xs) var(--spacing-sm);
   background: var(--color-background);
   border: 1px solid var(--color-border);
@@ -191,9 +193,10 @@
   font-size: 0.875rem;
   cursor: pointer;
   -webkit-app-region: no-drag;
+  min-width: 60px;
 }
 
-.step-selector select:disabled {
+.control-selectors select:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
@@ -201,7 +204,7 @@
 /* Direction Controls Grid */
 .direction-controls {
   display: flex;
-  justify-content: flex-start;
+  justify-content: center;
 }
 
 .direction-grid {
