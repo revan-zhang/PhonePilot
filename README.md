@@ -1,100 +1,185 @@
-# PhonePilot
+<p align="center">
+  <img src="public/icon.png" alt="PhonePilot Logo" width="120" height="120">
+</p>
 
-A modern desktop application built with Electron, React, and TypeScript.
+<h1 align="center">PhonePilot</h1>
+
+<p align="center">
+  <strong>Enable AI Agents to Physically Control Your Phone</strong>
+</p>
+
+<p align="center">
+  <a href="#"><img src="https://img.shields.io/badge/Platform-macOS%20%7C%20Windows%20%7C%20Linux-blue" alt="Platform"></a>
+  <a href="#"><img src="https://img.shields.io/badge/Electron-28.x-47848F?logo=electron&logoColor=white" alt="Electron"></a>
+  <a href="#"><img src="https://img.shields.io/badge/React-18.x-61DAFB?logo=react&logoColor=white" alt="React"></a>
+  <a href="#"><img src="https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white" alt="TypeScript"></a>
+  <a href="#"><img src="https://img.shields.io/badge/MCP-1.x-8B5CF6" alt="MCP"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-green" alt="License"></a>
+</p>
+
+---
+
+## About
+
+**PhonePilot** is an innovative desktop application that enables AI agents to physically control smartphones through a mechanical arm. Using the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/), AI agents (such as Claude, Cursor, etc.) can directly operate the mechanical arm to perform taps, swipes, and other touch interactions on the phone screen, while observing the results in real-time through a camera feed.
+
+This opens up a new dimension of physical interaction for AI "Computer Use" capabilities — allowing AI to not only control computers but also operate real mobile devices.
+
+<p align="center">
+  <img src="docs/assets/arm-hardware.png" alt="Mechanical Arm Hardware" width="600">
+  <br>
+  <em>Mechanical Arm Hardware Setup</em>
+</p>
 
 ## Features
 
-- Cross-platform support (macOS, Windows, Linux)
-- Modern React 18 with TypeScript
-- Fast development with Vite
-- CI/CD with GitHub Actions
-- Beautiful, modern UI
+### 🤖 Native MCP Protocol Support
 
-## Development
+Built-in MCP Server supporting both Streamable HTTP and SSE transport protocols, seamlessly integrating with any MCP-compatible AI client.
+
+| Tool | Description |
+|------|-------------|
+| `arm-connect` | Connect to the mechanical arm controller |
+| `arm-disconnect` | Disconnect from the mechanical arm |
+| `arm-move` | Move the arm to a specified position |
+| `arm-click` | Perform a click at the current position |
+| `capture-frame` | Capture the current camera frame |
+
+### 📷 Real-time Visual Feedback
+
+HD camera with live phone screen preview, featuring:
+- Auto-detection and connection to DECXIN cameras
+- Manual focus mode to prevent autofocus hunting
+- Crosshair and grid overlay assistants
+- 90° auto-rotation to match phone portrait display
+
+<p align="center">
+  <img src="docs/assets/control-software.png" alt="Control Software Interface" width="700">
+  <br>
+  <em>PhonePilot Control Interface</em>
+</p>
+
+### 🎮 Precision Mechanical Control
+
+- Millimeter-accurate X/Y axis movement
+- Adjustable step size (1-50mm)
+- Adjustable touch depth (Z-axis)
+- Real-time operation logging
+
+### 🖥️ Cross-Platform Desktop App
+
+Built with Electron, natively supporting:
+- macOS (Intel & Apple Silicon)
+- Windows (x64)
+- Linux (AppImage, deb)
+
+## Demo
+
+<p align="center">
+  <a href="docs/assets/showcase.mov">
+    <img src="docs/assets/points.png" alt="Point Calibration" width="600">
+    <br>
+    <em>📹 Click to watch the full demo video</em>
+  </a>
+</p>
+
+## How It Works
+
+```
+┌─────────────────┐     MCP Protocol      ┌──────────────────┐
+│                 │◄────────────────────►│                  │
+│   AI Agent      │   arm-move, click    │   PhonePilot     │
+│  (Claude, etc)  │   capture-frame      │   Desktop App    │
+│                 │                       │                  │
+└─────────────────┘                       └────────┬─────────┘
+                                                   │
+                                          ┌────────┴─────────┐
+                                          │                  │
+                                    ┌─────▼─────┐     ┌──────▼─────┐
+                                    │ Mechanical│     │   Camera   │
+                                    │    Arm    │     │  (DECXIN)  │
+                                    └─────┬─────┘     └──────┬─────┘
+                                          │                  │
+                                          ▼                  ▼
+                                    ┌──────────────────────────┐
+                                    │      Smartphone          │
+                                    │    (Physical Device)     │
+                                    └──────────────────────────┘
+```
+
+1. **AI Agent** connects to PhonePilot via MCP protocol
+2. **PhonePilot** translates MCP commands into mechanical arm control instructions
+3. **Mechanical Arm** performs physical touch operations on the phone screen
+4. **Camera** captures the screen and returns the frame to the AI agent
+5. **AI Agent** analyzes the frame and decides on the next action
+
+## Getting Started
 
 ### Prerequisites
 
 - Node.js 20.x or later
 - Yarn package manager
+- Compatible mechanical arm controller (via COM port)
+- USB camera (DECXIN recommended)
 
-### Setup
+### Installation & Running
 
 ```bash
+# Clone the repository
+git clone https://github.com/your-username/PhonePilot.git
+cd PhonePilot
+
 # Install dependencies
 yarn install
 
-# Start development server
-yarn dev
-
-# Or run with Electron
+# Start development environment
 yarn electron:dev
 ```
 
-### Available Scripts
-
-| Command | Description |
-|---------|-------------|
-| `yarn dev` | Start Vite dev server |
-| `yarn electron:dev` | Start Electron with hot reload |
-| `yarn build` | Build for production |
-| `yarn build:mac` | Build for macOS |
-| `yarn build:win` | Build for Windows |
-| `yarn build:linux` | Build for Linux |
-| `yarn lint` | Run ESLint |
-| `yarn lint:fix` | Fix ESLint errors |
-| `yarn typecheck` | Run TypeScript type check |
-
-## Project Structure
-
-```
-PhonePilot/
-├── electron/           # Electron main process
-│   ├── main.ts        # Main entry point
-│   ├── preload.ts     # Preload script for IPC
-│   └── electron-env.d.ts
-├── src/               # React renderer process
-│   ├── main.tsx       # React entry point
-│   ├── App.tsx        # Root component
-│   ├── styles/        # CSS styles
-│   └── vite-env.d.ts
-├── .github/workflows/ # CI/CD pipelines
-├── index.html         # HTML template
-├── vite.config.ts     # Vite configuration
-├── electron-builder.yml # Electron Builder config
-└── package.json
-```
-
-## Building
-
-### Local Build
+### Building for Production
 
 ```bash
-# Build for your current platform
+# Build for current platform
 yarn electron:build
 
-# Build for all platforms (requires respective OS or CI)
-yarn electron:build:all
+# Build for specific platforms
+yarn build:mac     # macOS
+yarn build:win     # Windows
+yarn build:linux   # Linux
 ```
 
-### CI/CD
+## MCP Integration
 
-The project uses GitHub Actions for automated builds. All builds skip code signing and notarization for simplicity.
+PhonePilot provides a complete MCP Server implementation that integrates with any MCP-compatible AI client.
 
-- **PR Check**: Runs on every pull request to validate code quality (lint & typecheck)
-- **Build & Release**: Builds unsigned packages for all platforms
+### Endpoints
 
-Builds are uploaded as artifacts and can be downloaded from the Actions tab.
+| Endpoint | Protocol | Purpose |
+|----------|----------|---------|
+| `POST /mcp` | Streamable HTTP | Modern MCP clients |
+| `GET /sse` | SSE | Legacy MCP clients |
+| `GET /health` | HTTP | Health check |
 
-To create a release:
+### Configuration Example
 
-```bash
-# Update version in package.json, then:
-git tag v1.0.0
-git push origin v1.0.0
+Configure the MCP Server in your AI client:
+
+```json
+{
+  "mcpServers": {
+    "phonepilot": {
+      "url": "http://localhost:3847/sse"
+    }
+  }
+}
 ```
-
-This will trigger a build and create a GitHub Release with the artifacts attached.
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) for details.
+This project is licensed under the [MIT License](LICENSE).
+
+---
+
+<p align="center">
+  <sub>Made with ❤️ for the AI-powered future</sub>
+</p>

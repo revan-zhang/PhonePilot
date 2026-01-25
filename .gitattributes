@@ -1,0 +1,4 @@
+# Git LFS configuration
+# Track all files under docs/ directory with Git LFS
+
+docs/** filter=lfs diff=lfs merge=lfs -text
