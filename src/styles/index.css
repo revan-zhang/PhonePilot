@@ -48,13 +48,15 @@ body {
   background-color: var(--color-background);
   color: var(--color-text);
   line-height: 1.6;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
 #root {
-  min-height: 100vh;
+  height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 /* Custom scrollbar */
