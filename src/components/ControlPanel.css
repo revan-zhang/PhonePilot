@@ -32,9 +32,6 @@
   height: 36px;
   box-sizing: border-box;
   font-size: 0.875rem;
-}
-
-.connection-row input {
   padding: 0 var(--spacing-sm);
   background: var(--color-background);
   border: 1px solid var(--color-border);
@@ -77,17 +74,19 @@
   color: var(--color-text);
   font-family: monospace;
   font-weight: 500;
+  min-width: 48px;
 }
 
 .btn-connect {
   height: 36px;
-  min-width: 88px;
-  padding: 0 var(--spacing-lg);
+  min-width: 80px;
+  padding: 0 var(--spacing-md);
   font-size: 0.875rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .status-dot {
@@ -139,31 +138,37 @@
 
 /* Control Content - Left/Right Split */
 .control-content {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr;
   gap: var(--spacing-lg);
   padding-top: var(--spacing-md);
   border-top: 1px solid var(--color-border);
 }
 
 .control-left {
-  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .control-right {
-  flex: 1;
   min-width: 200px;
+  max-height: 180px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 /* Direction Section */
 .direction-section {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-md);
+  flex: 1;
 }
 
 .step-selector {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 .step-selector label {
@@ -196,14 +201,14 @@
 /* Direction Controls Grid */
 .direction-controls {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 .direction-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 50px);
-  grid-template-rows: repeat(3, 50px);
-  gap: var(--spacing-xs);
+  display: inline-grid;
+  grid-template-columns: repeat(3, 40px);
+  grid-template-rows: repeat(3, 40px);
+  gap: 8px;
 }
 
 .grid-cell {
@@ -213,8 +218,8 @@
 }
 
 .direction-btn {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   padding: 0;
   font-size: 1.125rem;
   background: var(--color-background);
@@ -241,10 +246,10 @@
 }
 
 .click-btn {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   padding: 0;
-  font-size: 0.625rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   background: var(--color-primary);
   border: none;
@@ -253,6 +258,7 @@
   cursor: pointer;
   transition: all 0.15s ease;
   -webkit-app-region: no-drag;
+  white-space: nowrap;
 }
 
 .click-btn:hover:not(:disabled) {
@@ -269,33 +275,62 @@
   cursor: not-allowed;
 }
 
-/* Calibration Section */
-.calibration-section {
+/* Action Logs Section */
+.action-logs {
+  flex: 1;
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
-  height: 100%;
+  min-height: 0;
 }
 
-.calibration-section h4 {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--color-text);
-  margin: 0;
-}
-
-.calibration-placeholder {
+.logs-empty {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--color-background);
-  border: 1px dashed var(--color-border);
-  border-radius: var(--radius-md);
-  min-height: 120px;
-}
-
-.calibration-placeholder p {
   font-size: 0.75rem;
   color: var(--color-text-muted);
+}
+
+.logs-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacing-xs);
+}
+
+.log-entry {
+  display: flex;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: 0.75rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.log-entry:last-child {
+  border-bottom: none;
+}
+
+.log-time {
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+  font-family: monospace;
+}
+
+.log-action {
+  color: var(--color-primary);
+  font-weight: 500;
+  flex-shrink: 0;
+  min-width: 32px;
+}
+
+.log-detail {
+  color: var(--color-text);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

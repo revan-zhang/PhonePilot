@@ -19,6 +19,13 @@ interface ControlPanelState {
   error: string | null;
 }
 
+interface LogEntry {
+  id: number;
+  time: string;
+  action: string;
+  detail: string;
+}
+
 function ControlPanel() {
   const [state, setState] = useState<ControlPanelState>({
     isConnected: false,
@@ -32,6 +39,17 @@ function ControlPanel() {
     isReady: false,
     error: null,
   });
+
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+
+  const addLog = useCallback((action: string, detail: string) => {
+    const now = new Date();
+    const time = now.toLocaleTimeString('zh-CN', { hour12: false });
+    setLogs(prev => [
+      { id: Date.now(), time, action, detail },
+      ...prev.slice(0, 49),
+    ]);
+  }, []);
 
   /**
    * Sends a command to the arm controller via HTTP.
@@ -188,12 +206,16 @@ function ControlPanel() {
     
     setState(prev => ({ ...prev, isLoading: true, error: null }));
     
+    const directionLabel = { up: '上', down: '下', left: '左', right: '右' }[direction];
+    
     try {
       await sendCommand({
         duankou: '0',
         hco: state.resourceHandle,
         daima: `X${newX}Y${newY}`,
       });
+      
+      addLog('移动', `${directionLabel} (${state.currentX},${state.currentY}) → (${newX},${newY})`);
       
       setState(prev => ({
         ...prev,
@@ -202,6 +224,7 @@ function ControlPanel() {
         isLoading: false,
       }));
     } catch (error) {
+      addLog('错误', `移动失败: ${error instanceof Error ? error.message : 'Unknown'}`);
       setState(prev => ({
         ...prev,
         isLoading: false,
@@ -234,8 +257,11 @@ function ControlPanel() {
         daima: 'Z0',
       });
       
+      addLog('点击', `位置 (${state.currentX},${state.currentY})`);
+      
       setState(prev => ({ ...prev, isLoading: false }));
     } catch (error) {
+      addLog('错误', `点击失败: ${error instanceof Error ? error.message : 'Unknown'}`);
       setState(prev => ({
         ...prev,
         isLoading: false,
@@ -312,7 +338,7 @@ function ControlPanel() {
                 <div className="grid-cell"></div>
                 <div className="grid-cell">
                   <button
-                    className="btn direction-btn"
+                    className="direction-btn"
                     onClick={() => handleMove('up')}
                     disabled={isControlDisabled}
                     title="向上"
@@ -323,7 +349,7 @@ function ControlPanel() {
                 <div className="grid-cell"></div>
                 <div className="grid-cell">
                   <button
-                    className="btn direction-btn"
+                    className="direction-btn"
                     onClick={() => handleMove('left')}
                     disabled={isControlDisabled}
                     title="向左"
@@ -333,7 +359,7 @@ function ControlPanel() {
                 </div>
                 <div className="grid-cell">
                   <button
-                    className="btn click-btn"
+                    className="click-btn"
                     onClick={handleClick}
                     disabled={isControlDisabled}
                     title="点击"
@@ -343,7 +369,7 @@ function ControlPanel() {
                 </div>
                 <div className="grid-cell">
                   <button
-                    className="btn direction-btn"
+                    className="direction-btn"
                     onClick={() => handleMove('right')}
                     disabled={isControlDisabled}
                     title="向右"
@@ -354,7 +380,7 @@ function ControlPanel() {
                 <div className="grid-cell"></div>
                 <div className="grid-cell">
                   <button
-                    className="btn direction-btn"
+                    className="direction-btn"
                     onClick={() => handleMove('down')}
                     disabled={isControlDisabled}
                     title="向下"
@@ -369,11 +395,20 @@ function ControlPanel() {
         </div>
 
         <div className="control-right">
-          <div className="calibration-section">
-            <h4>摄像头校准</h4>
-            <div className="calibration-placeholder">
-              <p>校准功能开发中...</p>
-            </div>
+          <div className="action-logs">
+            {logs.length === 0 ? (
+              <div className="logs-empty">暂无操作日志</div>
+            ) : (
+              <div className="logs-list">
+                {logs.map(log => (
+                  <div key={log.id} className="log-entry">
+                    <span className="log-time">{log.time}</span>
+                    <span className="log-action">{log.action}</span>
+                    <span className="log-detail">{log.detail}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
