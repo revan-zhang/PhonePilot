@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, net } from 'electron';
 import path from 'path';
 
 // The built directory structure
@@ -89,4 +89,35 @@ ipcMain.handle('get-app-version', () => {
 
 ipcMain.handle('get-platform', () => {
   return process.platform;
+});
+
+// HTTP request handler (bypasses CORS)
+ipcMain.handle('http-request', async (_event, url: string) => {
+  return new Promise((resolve, reject) => {
+    const request = net.request(url);
+    let responseData = '';
+
+    request.on('response', (response) => {
+      response.on('data', (chunk) => {
+        responseData += chunk.toString();
+      });
+
+      response.on('end', () => {
+        resolve({
+          status: response.statusCode,
+          data: responseData,
+        });
+      });
+
+      response.on('error', (error: Error) => {
+        reject(new Error(`Response error: ${error.message}`));
+      });
+    });
+
+    request.on('error', (error) => {
+      reject(new Error(`Request error: ${error.message}`));
+    });
+
+    request.end();
+  });
 });

@@ -22,6 +22,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.send(channel, data);
     }
   },
+
+  // HTTP request (bypasses CORS by going through main process)
+  httpRequest: (url: string) => ipcRenderer.invoke('http-request', url),
 });
 
 // Type definitions for the exposed API
@@ -32,6 +35,7 @@ declare global {
       getPlatform: () => Promise<string>;
       onMainProcessMessage: (callback: (message: string) => void) => void;
       sendMessage: (channel: string, data: unknown) => void;
+      httpRequest: (url: string) => Promise<{ status: number; data: string }>;
     };
   }
 }
