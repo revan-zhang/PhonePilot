@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="public/icon.png" alt="PhonePilot Logo" width="120" height="120">
-</p>
-
 <h1 align="center">PhonePilot</h1>
 
 <p align="center">
