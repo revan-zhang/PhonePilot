@@ -1,5 +1,6 @@
 import CameraPanel from './components/CameraPanel';
 import ControlPanel from './components/ControlPanel';
+import McpLogsPanel from './components/McpLogsPanel';
 import './styles/App.css';
 
 function App() {
@@ -17,12 +18,7 @@ function App() {
           </div>
 
           <div className="mcp-logs-area">
-            <div className="mcp-logs-header">
-              <h3>MCP Logs</h3>
-            </div>
-            <div className="mcp-logs-content">
-              <p className="mcp-logs-placeholder">No logs available</p>
-            </div>
+            <McpLogsPanel />
           </div>
         </div>
       </div>

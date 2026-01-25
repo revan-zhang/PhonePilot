@@ -8,12 +8,61 @@ interface VideoDevice {
 
 function CameraPanel() {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [devices, setDevices] = useState<VideoDevice[]>([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState<string>('');
   const [showCrosshair, setShowCrosshair] = useState(false);
   const [showGrid, setShowGrid] = useState(false);
+
+  /**
+   * Captures the current video frame as a base64-encoded JPEG image.
+   * Rotates the frame 90 degrees clockwise to match the UI display (9:16 portrait).
+   * Used by MCP Server via IPC to get camera frames.
+   */
+  const captureFrame = useCallback((): string | null => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+
+    if (!video || !canvas || video.readyState < 2) {
+      console.warn('Video not ready for capture');
+      return null;
+    }
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      console.warn('Failed to get canvas context');
+      return null;
+    }
+
+    // Rotate 90 degrees clockwise: swap width and height for 9:16 portrait output
+    canvas.width = video.videoHeight;
+    canvas.height = video.videoWidth;
+
+    // Save context state
+    ctx.save();
+
+    // Translate to center, rotate 90 degrees clockwise, then draw
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.rotate(Math.PI / 2);
+    ctx.drawImage(
+      video,
+      -video.videoWidth / 2,
+      -video.videoHeight / 2,
+      video.videoWidth,
+      video.videoHeight
+    );
+
+    // Restore context state
+    ctx.restore();
+
+    // Convert to base64 JPEG (without the data:image/jpeg;base64, prefix)
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+    const base64 = dataUrl.replace(/^data:image\/jpeg;base64,/, '');
+
+    return base64;
+  }, []);
 
   // Get list of video devices
   const getVideoDevices = useCallback(async () => {
@@ -107,7 +156,7 @@ function CameraPanel() {
     }
   }, []);
 
-  // Initialize camera on mount
+  // Initialize camera on mount and set up IPC listener for frame capture
   useEffect(() => {
     const initCamera = async () => {
       // First, get camera permission with any camera
@@ -129,14 +178,21 @@ function CameraPanel() {
 
     initCamera();
 
+    // Set up IPC listener for frame capture requests from MCP Server
+    const unsubscribe = window.electronAPI?.onCaptureFrameRequest?.(() => {
+      const frame = captureFrame();
+      window.electronAPI?.sendCaptureFrameResponse?.(frame);
+    });
+
     // Cleanup on unmount
     return () => {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((track) => track.stop());
       }
+      unsubscribe?.();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [captureFrame]);
 
   // Handle device selection change
   const handleDeviceChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -146,6 +202,9 @@ function CameraPanel() {
 
   return (
     <div className="camera-panel">
+      {/* Hidden canvas for frame capture */}
+      <canvas ref={canvasRef} style={{ display: 'none' }} />
+
       {devices.length > 1 && (
         <div className="camera-controls">
           <select

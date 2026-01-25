@@ -1,0 +1,130 @@
+.mcp-logs-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  min-height: 200px;
+  overflow: hidden;
+}
+
+.mcp-logs-panel .mcp-logs-header {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-background);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mcp-logs-panel .mcp-logs-header h3 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.clear-logs-btn {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  -webkit-app-region: no-drag;
+}
+
+.clear-logs-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.mcp-logs-panel .mcp-logs-content {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.mcp-logs-placeholder {
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  text-align: center;
+  padding: var(--spacing-xl);
+  margin: auto;
+}
+
+.mcp-logs-list {
+  padding: var(--spacing-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mcp-log-entry {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: 0.75rem;
+  font-family: 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+  border-radius: var(--radius-sm);
+  background: var(--color-background);
+}
+
+.mcp-log-entry:hover {
+  background: var(--color-surface-hover);
+}
+
+.log-time {
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+  min-width: 70px;
+}
+
+.log-type {
+  flex-shrink: 0;
+  min-width: 36px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.log-type-request {
+  background: rgba(59, 130, 246, 0.2);
+  color: #3b82f6;
+}
+
+.log-type-response {
+  background: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+}
+
+.log-type-error {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.log-type-info {
+  background: rgba(156, 163, 175, 0.2);
+  color: #9ca3af;
+}
+
+.log-action {
+  color: var(--color-primary);
+  font-weight: 500;
+  flex-shrink: 0;
+  min-width: 100px;
+}
+
+.log-detail {
+  color: var(--color-text);
+  flex: 1;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
