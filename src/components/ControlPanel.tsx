@@ -14,6 +14,10 @@ interface AutoStep {
   depth: number;
   /** Optional delay in ms after this step (default: 100ms) */
   delayAfter?: number;
+  /** If set, performs a swipe from (x,y) to swipeTo coordinates instead of a click */
+  swipeTo?: { x: number; y: number };
+  /** Delay in ms before raising stylus after swipe (default: 50ms) */
+  swipeHoldDelay?: number;
 }
 
 /** Shared prefix steps (language, PIN, navigation to wallet import) */
@@ -40,19 +44,24 @@ const PREFIX_STEPS: AutoStep[] = [
   { label: '点击助记词', x: 55, y: 75, depth: 12 },
 ];
 
-/** Shared suffix steps (continue, next, finish) */
+/** Shared suffix steps (continue, next, finish, reset) */
 const SUFFIX_STEPS: AutoStep[] = [
   { label: '点击继续', x: 55, y: 85, depth: 12 },
   { label: '点击下一步', x: 55, y: 85, depth: 12 },
   { label: '点击完成', x: 55, y: 85, depth: 12, delayAfter: 2000 },
+  { label: '复位', x: 0, y: 0, depth: 12 },
 ];
 
 /** Sequence configuration: only contains the variable parts */
 interface OperationSequence {
   id: string;
   name: string;
-  selectTypeStep: AutoStep;
+  selectTypeStep: AutoStep | null;
   wordSteps: AutoStep[];
+  /** If true, skip PREFIX_STEPS when assembling full sequence */
+  skipPrefix?: boolean;
+  /** If true, skip SUFFIX_STEPS when assembling full sequence */
+  skipSuffix?: boolean;
 }
 
 /** 12 words "all" input steps */
@@ -119,24 +128,80 @@ const WORDS_12_STEPS: AutoStep[] = [
   { label: '点击确认', x: 59, y: 88, depth: 12, delayAfter: 2000 },
 ];
 
+/** Reset wallet steps */
+const RESET_WALLET_STEPS: AutoStep[] = [
+  // Wake up password keyboard (double click)
+  { label: '唤醒键盘0', x: 35, y: 85, depth: 12 },
+  { label: '唤醒键盘1', x: 35, y: 85, depth: 12 },
+  { label: '唤醒键盘2', x: 35, y: 85, depth: 12, delayAfter: 1000 },
+  // Enter PIN 1111
+  { label: '输入PIN码1', x: 25, y: 50, depth: 12 },
+  { label: '输入PIN码2', x: 25, y: 50, depth: 12 },
+  { label: '输入PIN码3', x: 25, y: 50, depth: 12 },
+  { label: '输入PIN码4', x: 25, y: 50, depth: 12 },
+  { label: '点击确认', x: 55, y: 85, depth: 12, delayAfter: 2000 },
+  // Enter settings
+  { label: '进入设置APP', x: 50, y: 65, depth: 12 },
+  { label: '进入钱包栏目', x: 50, y: 55, depth: 12 },
+  // Swipe up
+  { label: '向上滑动', x: 35, y: 85, depth: 12, swipeTo: { x: 35, y: 70 } },
+  // Double click
+  { label: '点击1', x: 50, y: 85, depth: 12 },
+  { label: '点击2', x: 50, y: 85, depth: 12 },
+  // Settings navigation
+  { label: '点击设置项1', x: 25, y: 40, depth: 12 },
+  { label: '点击设置项2', x: 25, y: 55, depth: 12 },
+  // Swipe left to right, hold before release, then wait
+  { label: '向右滑动', x: 20, y: 75, depth: 12, swipeTo: { x: 60, y: 75 }, swipeHoldDelay: 500, delayAfter: 5000 },
+  // Final confirmation with wait
+  { label: '点击确认', x: 25, y: 85, depth: 12, delayAfter: 10000 },
+  // Reset to origin
+  { label: '复位', x: 0, y: 0, depth: 12 },
+];
+
 /** Available operation sequences */
 const OPERATION_SEQUENCES: OperationSequence[] = [
   {
     id: 'words-12',
-    name: '12个 ALL 测试助记词',
+    name: '12个词',
     selectTypeStep: { label: '点击12位助记词', x: 55, y: 50, depth: 12 },
     wordSteps: WORDS_12_STEPS,
+  },
+  {
+    id: 'reset-wallet',
+    name: '重置钱包',
+    selectTypeStep: null,
+    wordSteps: RESET_WALLET_STEPS,
+    skipPrefix: true,
+    skipSuffix: true,
   },
 ];
 
 /** Assembles the full steps sequence from a sequence configuration */
-const getFullSteps = (sequence: OperationSequence): AutoStep[] => [
-  ...PREFIX_STEPS,
-  sequence.selectTypeStep,
-  { label: '点击继续', x: 55, y: 85, depth: 12 },
-  ...sequence.wordSteps,
-  ...SUFFIX_STEPS,
-];
+const getFullSteps = (sequence: OperationSequence): AutoStep[] => {
+  const steps: AutoStep[] = [];
+
+  // Add prefix steps if not skipped
+  if (!sequence.skipPrefix) {
+    steps.push(...PREFIX_STEPS);
+  }
+
+  // Add selectTypeStep and continue button if present
+  if (sequence.selectTypeStep) {
+    steps.push(sequence.selectTypeStep);
+    steps.push({ label: '点击继续', x: 55, y: 85, depth: 12 });
+  }
+
+  // Add word steps
+  steps.push(...sequence.wordSteps);
+
+  // Add suffix steps if not skipped
+  if (!sequence.skipSuffix) {
+    steps.push(...SUFFIX_STEPS);
+  }
+
+  return steps;
+};
 
 interface ControlPanelState {
   isConnected: boolean;
@@ -440,30 +505,62 @@ function ControlPanel() {
         const step = steps[i];
         setState(prev => ({ ...prev, autoProgress: i + 1 }));
 
-        // Move to position
-        await sendCommand({
-          duankou: '0',
-          hco: state.resourceHandle,
-          daima: `X${step.x}Y${step.y}`,
-        });
+        if (step.swipeTo) {
+          // Swipe operation: move to start -> lower stylus -> move to end -> raise stylus
+          await sendCommand({
+            duankou: '0',
+            hco: state.resourceHandle,
+            daima: `X${step.x}Y${step.y}`,
+          });
 
-        // Click at depth
-        await sendCommand({
-          duankou: '0',
-          hco: state.resourceHandle,
-          daima: `Z${step.depth}`,
-        });
+          await sendCommand({
+            duankou: '0',
+            hco: state.resourceHandle,
+            daima: `Z${step.depth}`,
+          });
 
-        await delay(ARM_CONTROLLER_CONFIG.clickDelay);
+          await delay(50);
 
-        // Raise stylus
-        await sendCommand({
-          duankou: '0',
-          hco: state.resourceHandle,
-          daima: `Z${ARM_CONTROLLER_CONFIG.zUp}`,
-        });
+          await sendCommand({
+            duankou: '0',
+            hco: state.resourceHandle,
+            daima: `X${step.swipeTo.x}Y${step.swipeTo.y}`,
+          });
 
-        addLog('自动', `${step.label} (${step.x},${step.y})`);
+          // Wait before raising stylus (use custom hold delay or default 50ms)
+          await delay(step.swipeHoldDelay ?? 50);
+
+          await sendCommand({
+            duankou: '0',
+            hco: state.resourceHandle,
+            daima: `Z${ARM_CONTROLLER_CONFIG.zUp}`,
+          });
+
+          addLog('自动', `${step.label} (${step.x},${step.y}) → (${step.swipeTo.x},${step.swipeTo.y})`);
+        } else {
+          // Click operation: move to position -> lower stylus -> raise stylus
+          await sendCommand({
+            duankou: '0',
+            hco: state.resourceHandle,
+            daima: `X${step.x}Y${step.y}`,
+          });
+
+          await sendCommand({
+            duankou: '0',
+            hco: state.resourceHandle,
+            daima: `Z${step.depth}`,
+          });
+
+          await delay(ARM_CONTROLLER_CONFIG.clickDelay);
+
+          await sendCommand({
+            duankou: '0',
+            hco: state.resourceHandle,
+            daima: `Z${ARM_CONTROLLER_CONFIG.zUp}`,
+          });
+
+          addLog('自动', `${step.label} (${step.x},${step.y})`);
+        }
 
         // Wait before next step (use custom delay or default 100ms)
         await delay(step.delayAfter ?? 200);
