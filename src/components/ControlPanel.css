@@ -145,6 +145,29 @@
   align-items: center;
 }
 
+.sequence-select {
+  height: 36px;
+  min-width: 100px;
+  padding: 0 var(--spacing-sm);
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  font-size: 0.875rem;
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+}
+
+.sequence-select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.sequence-select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
 .btn-auto {
   height: 36px;
   min-width: 140px;

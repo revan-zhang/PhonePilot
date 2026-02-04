@@ -16,8 +16,8 @@ interface AutoStep {
   delayAfter?: number;
 }
 
-/** Predefined sequence of auto operation steps */
-const AUTO_OPERATION_STEPS: AutoStep[] = [
+/** Shared prefix steps (language, PIN, navigation to wallet import) */
+const PREFIX_STEPS: AutoStep[] = [
   // Initial setup
   { label: '选择语言', x: 30, y: 55, depth: 12 },
   { label: '点击继续', x: 30, y: 85, depth: 12 },
@@ -38,8 +38,25 @@ const AUTO_OPERATION_STEPS: AutoStep[] = [
   { label: '点击稍后设置', x: 55, y: 85, depth: 12 },
   { label: '点击导入钱包', x: 55, y: 85, depth: 12 },
   { label: '点击助记词', x: 55, y: 75, depth: 12 },
-  { label: '点击12位助记词', x: 55, y: 50, depth: 12 },
+];
+
+/** Shared suffix steps (continue, next, finish) */
+const SUFFIX_STEPS: AutoStep[] = [
   { label: '点击继续', x: 55, y: 85, depth: 12 },
+  { label: '点击下一步', x: 55, y: 85, depth: 12 },
+  { label: '点击完成', x: 55, y: 85, depth: 12, delayAfter: 2000 },
+];
+
+/** Sequence configuration: only contains the variable parts */
+interface OperationSequence {
+  id: string;
+  name: string;
+  selectTypeStep: AutoStep;
+  wordSteps: AutoStep[];
+}
+
+/** 12 words "all" input steps */
+const WORDS_12_STEPS: AutoStep[] = [
   // Word 1: "all"
   { label: '点击单词a', x: 20, y: 80, depth: 12, delayAfter: 1000 },
   { label: '点击单词l', x: 59, y: 80, depth: 12, delayAfter: 1000 },
@@ -100,10 +117,25 @@ const AUTO_OPERATION_STEPS: AutoStep[] = [
   { label: '点击单词l', x: 59, y: 80, depth: 12, delayAfter: 1000 },
   { label: '点击单词l', x: 59, y: 80, depth: 12, delayAfter: 1000 },
   { label: '点击确认', x: 59, y: 88, depth: 12, delayAfter: 2000 },
-  // Final steps
+];
+
+/** Available operation sequences */
+const OPERATION_SEQUENCES: OperationSequence[] = [
+  {
+    id: 'words-12',
+    name: '12个 ALL 测试助记词',
+    selectTypeStep: { label: '点击12位助记词', x: 55, y: 50, depth: 12 },
+    wordSteps: WORDS_12_STEPS,
+  },
+];
+
+/** Assembles the full steps sequence from a sequence configuration */
+const getFullSteps = (sequence: OperationSequence): AutoStep[] => [
+  ...PREFIX_STEPS,
+  sequence.selectTypeStep,
   { label: '点击继续', x: 55, y: 85, depth: 12 },
-  { label: '点击下一步', x: 55, y: 85, depth: 12 },
-  { label: '点击完成', x: 55, y: 85, depth: 12, delayAfter: 2000 },
+  ...sequence.wordSteps,
+  ...SUFFIX_STEPS,
 ];
 
 interface ControlPanelState {
@@ -120,6 +152,7 @@ interface ControlPanelState {
   error: string | null;
   isAutoRunning: boolean;
   autoProgress: number;
+  selectedSequenceId: string;
 }
 
 interface LogEntry {
@@ -144,6 +177,7 @@ function ControlPanel() {
     error: null,
     isAutoRunning: false,
     autoProgress: 0,
+    selectedSequenceId: OPERATION_SEQUENCES[0].id,
   });
 
   // Ref to track if auto operation should be cancelled
@@ -380,25 +414,30 @@ function ControlPanel() {
   };
 
   /**
-   * Executes the predefined auto operation sequence.
-   * Performs move and click operations for each step with 100ms delay between steps.
+   * Executes the selected auto operation sequence.
+   * Performs move and click operations for each step with configurable delay between steps.
    */
   const handleAutoOperation = async () => {
     if (state.isLoading || !state.isConnected || !state.isReady || state.isAutoRunning) return;
 
+    const sequence = OPERATION_SEQUENCES.find(s => s.id === state.selectedSequenceId);
+    if (!sequence) return;
+
+    const steps = getFullSteps(sequence);
+
     autoOperationCancelledRef.current = false;
     setState(prev => ({ ...prev, isAutoRunning: true, autoProgress: 0, error: null }));
-    addLog('自动', '开始执行自动操作序列');
+    addLog('自动', `开始执行自动操作序列: ${sequence.name}`);
 
     try {
-      for (let i = 0; i < AUTO_OPERATION_STEPS.length; i++) {
+      for (let i = 0; i < steps.length; i++) {
         // Check if operation was cancelled
         if (autoOperationCancelledRef.current) {
           addLog('自动', '操作已取消');
           break;
         }
 
-        const step = AUTO_OPERATION_STEPS[i];
+        const step = steps[i];
         setState(prev => ({ ...prev, autoProgress: i + 1 }));
 
         // Move to position
@@ -493,20 +532,30 @@ function ControlPanel() {
       <div className="control-section auto-operation-section">
         <h3>自动操作</h3>
         <div className="auto-operation-row">
+          <select
+            value={state.selectedSequenceId}
+            onChange={(e) => setState(prev => ({ ...prev, selectedSequenceId: e.target.value }))}
+            disabled={state.isAutoRunning || !state.isConnected || !state.isReady || state.isLoading}
+            className="sequence-select"
+          >
+            {OPERATION_SEQUENCES.map(seq => (
+              <option key={seq.id} value={seq.id}>{seq.name}</option>
+            ))}
+          </select>
           <button
             className={`btn btn-auto ${state.isAutoRunning ? 'btn-secondary' : 'btn-primary'}`}
             onClick={state.isAutoRunning ? handleCancelAutoOperation : handleAutoOperation}
             disabled={!state.isConnected || !state.isReady || state.isLoading}
           >
             {state.isAutoRunning
-              ? `取消 (${state.autoProgress}/${AUTO_OPERATION_STEPS.length})`
-              : '开始自动操作'}
+              ? `取消 (${state.autoProgress}/${getFullSteps(OPERATION_SEQUENCES.find(s => s.id === state.selectedSequenceId)!).length})`
+              : '开始'}
           </button>
           {state.isAutoRunning && (
             <div className="auto-progress">
               <div
                 className="auto-progress-bar"
-                style={{ width: `${(state.autoProgress / AUTO_OPERATION_STEPS.length) * 100}%` }}
+                style={{ width: `${(state.autoProgress / getFullSteps(OPERATION_SEQUENCES.find(s => s.id === state.selectedSequenceId)!).length) * 100}%` }}
               />
             </div>
           )}
