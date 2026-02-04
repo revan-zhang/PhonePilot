@@ -125,6 +125,53 @@
   color: var(--color-text-muted);
 }
 
+/* Auto Operation Section */
+.auto-operation-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.auto-operation-section h3 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0 0 var(--spacing-xs) 0;
+}
+
+.auto-operation-row {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+}
+
+.btn-auto {
+  height: 36px;
+  min-width: 140px;
+  padding: 0 var(--spacing-md);
+  font-size: 0.875rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.auto-progress {
+  flex: 1;
+  height: 8px;
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.auto-progress-bar {
+  height: 100%;
+  background: var(--color-primary);
+  transition: width 0.2s ease;
+}
+
 /* Error Message */
 .error-message {
   padding: var(--spacing-xs) var(--spacing-sm);

@@ -4,7 +4,7 @@
  */
 export const ARM_CONTROLLER_CONFIG = {
   /** Default server IP address */
-  defaultServerIP: '192.168.1.236',
+  defaultServerIP: '192.168.5.106',
   /** API service port */
   apiPort: '8082',
   /** Default COM port */

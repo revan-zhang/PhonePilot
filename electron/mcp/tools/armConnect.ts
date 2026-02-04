@@ -18,7 +18,7 @@ export const armConnectSchema = z.object({
   serverIP: z
     .string()
     .optional()
-    .describe('Server IP address (default: 192.168.1.236)'),
+    .describe('Server IP address (default: 192.168.5.106)'),
   comPort: z
     .string()
     .optional()

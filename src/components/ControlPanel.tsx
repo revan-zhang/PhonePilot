@@ -1,10 +1,110 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import {
   ARM_CONTROLLER_CONFIG,
   buildArmApiUrl,
   parseResourceHandle,
 } from '../config/armController';
 import './ControlPanel.css';
+
+/** Represents a single step in the auto operation sequence */
+interface AutoStep {
+  label: string;
+  x: number;
+  y: number;
+  depth: number;
+  /** Optional delay in ms after this step (default: 100ms) */
+  delayAfter?: number;
+}
+
+/** Predefined sequence of auto operation steps */
+const AUTO_OPERATION_STEPS: AutoStep[] = [
+  // Initial setup
+  { label: '选择语言', x: 30, y: 55, depth: 12 },
+  { label: '点击继续', x: 30, y: 85, depth: 12 },
+  // Enter PIN code (4 digits)
+  { label: '输入PIN码1', x: 25, y: 50, depth: 12 },
+  { label: '输入PIN码2', x: 25, y: 50, depth: 12 },
+  { label: '输入PIN码3', x: 25, y: 50, depth: 12 },
+  { label: '输入PIN码4', x: 25, y: 50, depth: 12 },
+  { label: '点击确认', x: 55, y: 85, depth: 12 },
+  // Confirm PIN code (4 digits)
+  { label: '再次确认PIN码1', x: 25, y: 50, depth: 12 },
+  { label: '再次确认PIN码2', x: 25, y: 50, depth: 12 },
+  { label: '再次确认PIN码3', x: 25, y: 50, depth: 12 },
+  { label: '再次确认PIN码4', x: 25, y: 50, depth: 12 },
+  { label: '点击确认', x: 55, y: 85, depth: 12 },
+  // Navigation
+  { label: '点击继续', x: 55, y: 85, depth: 12 },
+  { label: '点击稍后设置', x: 55, y: 85, depth: 12 },
+  { label: '点击导入钱包', x: 55, y: 85, depth: 12 },
+  { label: '点击助记词', x: 55, y: 75, depth: 12 },
+  { label: '点击12位助记词', x: 55, y: 50, depth: 12 },
+  { label: '点击继续', x: 55, y: 85, depth: 12 },
+  // Word 1: "all"
+  { label: '点击单词a', x: 20, y: 80, depth: 12, delayAfter: 1000 },
+  { label: '点击单词l', x: 59, y: 80, depth: 12, delayAfter: 1000 },
+  { label: '点击单词l', x: 59, y: 80, depth: 12, delayAfter: 1000 },
+  { label: '点击确认', x: 59, y: 88, depth: 12, delayAfter: 2000 },
+  // Word 2: "all"
+  { label: '点击单词a', x: 20, y: 80, depth: 12, delayAfter: 1000 },
+  { label: '点击单词l', x: 59, y: 80, depth: 12, delayAfter: 1000 },
+  { label: '点击单词l', x: 59, y: 80, depth: 12, delayAfter: 1000 },
+  { label: '点击确认', x: 59, y: 88, depth: 12, delayAfter: 2000 },
+  // Word 3: "all"
+  { label: '点击单词a', x: 20, y: 80, depth: 12, delayAfter: 1000 },
+  { label: '点击单词l', x: 59, y: 80, depth: 12, delayAfter: 1000 },
+  { label: '点击单词l', x: 59, y: 80, depth: 12, delayAfter: 1000 },
+  { label: '点击确认', x: 59, y: 88, depth: 12, delayAfter: 2000 },
+  // Word 4: "all"
+  { label: '点击单词a', x: 20, y: 80, depth: 12, delayAfter: 1000 },
+  { label: '点击单词l', x: 59, y: 80, depth: 12, delayAfter: 1000 },
+  { label: '点击单词l', x: 59, y: 80, depth: 12, delayAfter: 1000 },
+  { label: '点击确认', x: 59, y: 88, depth: 12, delayAfter: 2000 },
+  // Word 5: "all"
+  { label: '点击单词a', x: 20, y: 80, depth: 12, delayAfter: 1000 },
+  { label: '点击单词l', x: 59, y: 80, depth: 12, delayAfter: 1000 },
+  { label: '点击单词l', x: 59, y: 80, depth: 12, delayAfter: 1000 },
+  { label: '点击确认', x: 59, y: 88, depth: 12, delayAfter: 2000 },
+  // Word 6: "all"
+  { label: '点击单词a', x: 20, y: 80, depth: 12, delayAfter: 1000 },
+  { label: '点击单词l', x: 59, y: 80, depth: 12, delayAfter: 1000 },
+  { label: '点击单词l', x: 59, y: 80, depth: 12, delayAfter: 1000 },
+  { label: '点击确认', x: 59, y: 88, depth: 12, delayAfter: 2000 },
+  // Word 7: "all"
+  { label: '点击单词a', x: 20, y: 80, depth: 12, delayAfter: 1000 },
+  { label: '点击单词l', x: 59, y: 80, depth: 12, delayAfter: 1000 },
+  { label: '点击单词l', x: 59, y: 80, depth: 12, delayAfter: 1000 },
+  { label: '点击确认', x: 59, y: 88, depth: 12, delayAfter: 2000 },
+  // Word 8: "all"
+  { label: '点击单词a', x: 20, y: 80, depth: 12, delayAfter: 1000 },
+  { label: '点击单词l', x: 59, y: 80, depth: 12, delayAfter: 1000 },
+  { label: '点击单词l', x: 59, y: 80, depth: 12, delayAfter: 1000 },
+  { label: '点击确认', x: 59, y: 88, depth: 12, delayAfter: 2000 },
+  // Word 9: "all"
+  { label: '点击单词a', x: 20, y: 80, depth: 12, delayAfter: 1000 },
+  { label: '点击单词l', x: 59, y: 80, depth: 12, delayAfter: 1000 },
+  { label: '点击单词l', x: 59, y: 80, depth: 12, delayAfter: 1000 },
+  { label: '点击确认', x: 59, y: 88, depth: 12, delayAfter: 2000 },
+  // Word 10: "all"
+  { label: '点击单词a', x: 20, y: 80, depth: 12, delayAfter: 1000 },
+  { label: '点击单词l', x: 59, y: 80, depth: 12, delayAfter: 1000 },
+  { label: '点击单词l', x: 59, y: 80, depth: 12, delayAfter: 1000 },
+  { label: '点击确认', x: 59, y: 88, depth: 12, delayAfter: 2000 },
+  // Word 11: "all"
+  { label: '点击单词a', x: 20, y: 80, depth: 12, delayAfter: 1000 },
+  { label: '点击单词l', x: 59, y: 80, depth: 12, delayAfter: 1000 },
+  { label: '点击单词l', x: 59, y: 80, depth: 12, delayAfter: 1000 },
+  { label: '点击确认', x: 59, y: 88, depth: 12, delayAfter: 2000 },
+  // Word 12: "all"
+  { label: '点击单词a', x: 20, y: 80, depth: 12, delayAfter: 1000 },
+  { label: '点击单词l', x: 59, y: 80, depth: 12, delayAfter: 1000 },
+  { label: '点击单词l', x: 59, y: 80, depth: 12, delayAfter: 1000 },
+  { label: '点击确认', x: 59, y: 88, depth: 12, delayAfter: 2000 },
+  // Final steps
+  { label: '点击继续', x: 55, y: 85, depth: 12 },
+  { label: '点击下一步', x: 55, y: 85, depth: 12 },
+  { label: '点击完成', x: 55, y: 85, depth: 12, delayAfter: 2000 },
+];
 
 interface ControlPanelState {
   isConnected: boolean;
@@ -18,6 +118,8 @@ interface ControlPanelState {
   isLoading: boolean;
   isReady: boolean;
   error: string | null;
+  isAutoRunning: boolean;
+  autoProgress: number;
 }
 
 interface LogEntry {
@@ -40,7 +142,12 @@ function ControlPanel() {
     isLoading: false,
     isReady: false,
     error: null,
+    isAutoRunning: false,
+    autoProgress: 0,
   });
+
+  // Ref to track if auto operation should be cancelled
+  const autoOperationCancelledRef = useRef(false);
 
   const [logs, setLogs] = useState<LogEntry[]>([]);
 
@@ -272,7 +379,79 @@ function ControlPanel() {
     }
   };
 
-  const isControlDisabled = !state.isConnected || !state.isReady || state.isLoading;
+  /**
+   * Executes the predefined auto operation sequence.
+   * Performs move and click operations for each step with 100ms delay between steps.
+   */
+  const handleAutoOperation = async () => {
+    if (state.isLoading || !state.isConnected || !state.isReady || state.isAutoRunning) return;
+
+    autoOperationCancelledRef.current = false;
+    setState(prev => ({ ...prev, isAutoRunning: true, autoProgress: 0, error: null }));
+    addLog('自动', '开始执行自动操作序列');
+
+    try {
+      for (let i = 0; i < AUTO_OPERATION_STEPS.length; i++) {
+        // Check if operation was cancelled
+        if (autoOperationCancelledRef.current) {
+          addLog('自动', '操作已取消');
+          break;
+        }
+
+        const step = AUTO_OPERATION_STEPS[i];
+        setState(prev => ({ ...prev, autoProgress: i + 1 }));
+
+        // Move to position
+        await sendCommand({
+          duankou: '0',
+          hco: state.resourceHandle,
+          daima: `X${step.x}Y${step.y}`,
+        });
+
+        // Click at depth
+        await sendCommand({
+          duankou: '0',
+          hco: state.resourceHandle,
+          daima: `Z${step.depth}`,
+        });
+
+        await delay(ARM_CONTROLLER_CONFIG.clickDelay);
+
+        // Raise stylus
+        await sendCommand({
+          duankou: '0',
+          hco: state.resourceHandle,
+          daima: `Z${ARM_CONTROLLER_CONFIG.zUp}`,
+        });
+
+        addLog('自动', `${step.label} (${step.x},${step.y})`);
+
+        // Wait before next step (use custom delay or default 100ms)
+        await delay(step.delayAfter ?? 200);
+      }
+
+      if (!autoOperationCancelledRef.current) {
+        addLog('自动', '自动操作序列完成');
+      }
+    } catch (error) {
+      addLog('错误', `自动操作失败: ${error instanceof Error ? error.message : 'Unknown'}`);
+      setState(prev => ({
+        ...prev,
+        error: error instanceof Error ? error.message : 'Auto operation failed',
+      }));
+    } finally {
+      setState(prev => ({ ...prev, isAutoRunning: false, autoProgress: 0 }));
+    }
+  };
+
+  /**
+   * Cancels the ongoing auto operation.
+   */
+  const handleCancelAutoOperation = () => {
+    autoOperationCancelledRef.current = true;
+  };
+
+  const isControlDisabled = !state.isConnected || !state.isReady || state.isLoading || state.isAutoRunning;
 
   return (
     <div className="control-panel">
@@ -302,12 +481,35 @@ function ControlPanel() {
           <button
             className={`btn btn-connect ${state.isConnected ? 'btn-secondary' : 'btn-primary'}`}
             onClick={state.isConnected ? handleDisconnect : handleConnect}
-            disabled={state.isLoading}
+            disabled={state.isLoading || state.isAutoRunning}
           >
             {state.isLoading
               ? (state.isConnected ? '断开中...' : '连接中...')
               : (state.isConnected ? '断开连接' : '连接')}
           </button>
+        </div>
+      </div>
+
+      <div className="control-section auto-operation-section">
+        <h3>自动操作</h3>
+        <div className="auto-operation-row">
+          <button
+            className={`btn btn-auto ${state.isAutoRunning ? 'btn-secondary' : 'btn-primary'}`}
+            onClick={state.isAutoRunning ? handleCancelAutoOperation : handleAutoOperation}
+            disabled={!state.isConnected || !state.isReady || state.isLoading}
+          >
+            {state.isAutoRunning
+              ? `取消 (${state.autoProgress}/${AUTO_OPERATION_STEPS.length})`
+              : '开始自动操作'}
+          </button>
+          {state.isAutoRunning && (
+            <div className="auto-progress">
+              <div
+                className="auto-progress-bar"
+                style={{ width: `${(state.autoProgress / AUTO_OPERATION_STEPS.length) * 100}%` }}
+              />
+            </div>
+          )}
         </div>
       </div>
 

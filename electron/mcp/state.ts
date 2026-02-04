@@ -22,7 +22,7 @@ export interface ArmState {
 
 /** Default arm controller configuration */
 export const ARM_CONFIG = {
-  defaultServerIP: '192.168.1.236',
+  defaultServerIP: '192.168.5.106',
   apiPort: '8082',
   defaultComPort: 'COM3',
   apiPath: '/MyWcfService/getstring',
